@@ -11,5 +11,5 @@ router.register(r'groups', views.GroupViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('song/', views.get_song, name='get_song'),
+    path('callback/', views.spotify_callback, name='spotify_callback')
 ]

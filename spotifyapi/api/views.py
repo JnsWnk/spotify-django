@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
+from django.shortcuts import redirect
 import requests
 import spotipy
 from rest_framework import viewsets
@@ -26,13 +27,26 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+# Not secure, to be changed later, only for testing purposes
+
 
 @api_view(['GET'])
-def get_song(request):
-    client_credentials_manager = spotipy.SpotifyClientCredentials(
-        client_id=settings.SPOTIFY_ID, client_secret=settings.SPOTIFY_SECRET)
-    sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+def spotify_callback(request):
+    code = request.GET.get('code')
 
-    song = sp.search(q='track:Believe artist:Cher', type='track')
+    client_id = settings.SPOTIFY_ID
+    client_secret = settings.SPOTIFY_SECRET
+    # Update with your actual redirect URI
+    redirect_uri = "http://localhost:8000/callback"
 
-    return JsonResponse(song)
+    sp_oauth = spotipy.SpotifyOAuth(client_id=client_id, client_secret=client_secret,
+                                    redirect_uri=redirect_uri, scope='user-read-email user-read-private')
+    token_info = sp_oauth.get_access_token(code)
+    token = token_info['access_token']
+
+    # Redirect the user to the frontend with the token
+    frontend_url = settings.FRONTEND_URL
+    # Include the token in the query parameter
+    redirect_url = f'{frontend_url}?token={token}'
+
+    return redirect(redirect_url)
